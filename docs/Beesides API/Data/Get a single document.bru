@@ -1,0 +1,21 @@
+meta {
+  name: Get a single document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/data/:databaseId/:collectionId/:documentId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  databaseId: 
+  collectionId: 
+  documentId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}

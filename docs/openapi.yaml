@@ -1,0 +1,632 @@
+openapi: 3.0.0
+info:
+  title: Beesides API
+  version: "1.0.0"
+  description: API for the Beesides music discovery platform.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Error message
+        error:
+          type: object
+          description: Detailed error object from the backend
+    UserRegistrationRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: strongpassword123
+        name:
+          type: string
+          example: Test User
+    UserLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: strongpassword123
+    LogoutRequest:
+      type: object
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          example: "current_or_specific_session_id"
+    AppwriteUser:
+      type: object
+      properties:
+        $id:
+          type: string
+          example: "5f8f8f8f8f8f8f8f"
+        name:
+          type: string
+          example: Test User
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        registration:
+          type: string
+          format: date-time
+          example: "2023-10-26T10:00:00.000Z"
+        status:
+          type: boolean
+          example: true
+        emailVerification:
+          type: boolean
+          example: false
+        prefs:
+          type: object
+    AppwriteSession:
+      type: object
+      properties:
+        $id:
+          type: string
+          example: "session_id_example"
+        userId:
+          type: string
+          example: "user_id_example"
+        expire:
+          type: string
+          format: date-time
+          example: "2023-10-26T12:00:00.000Z"
+        provider:
+          type: string
+          example: "email"
+        ip:
+          type: string
+          example: "127.0.0.1"
+    UserRegistrationResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AppwriteUser"
+        session:
+          $ref: "#/components/schemas/AppwriteSession"
+    UserLoginResponse:
+      type: object
+      properties:
+        session:
+          $ref: "#/components/schemas/AppwriteSession"
+    GetUserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AppwriteUser"
+    SuccessMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Operation successful
+    Document:
+      type: object
+      additionalProperties: true
+      example:
+        field1: value1
+        field2: value2
+    DocumentList:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 10
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Document"
+    FileUploadRequest:
+      type: object
+      required:
+        - name
+        - contentType
+      properties:
+        name:
+          type: string
+          example: "myphoto.jpg"
+        contentType:
+          type: string
+          example: "image/jpeg"
+    FileUploadResponse:
+      type: object
+      properties:
+        fileId:
+          type: string
+          example: "unique_file_id"
+        uploadUrl:
+          type: string
+          format: url
+          example: "https://example.com/upload_endpoint"
+    AppwriteFile:
+      type: object
+      properties:
+        $id:
+          type: string
+        bucketId:
+          type: string
+        name:
+          type: string
+        signature:
+          type: string
+        mimeType:
+          type: string
+        sizeOriginal:
+          type: integer
+    GetFileResponse:
+      type: object
+      properties:
+        file:
+          $ref: "#/components/schemas/AppwriteFile"
+        url:
+          type: string
+          format: url
+    FileListResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppwriteFile"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /:
+    get:
+      summary: Base API route
+      responses:
+        "200":
+          description: Welcome message and API info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  documentation:
+                    type: string
+  /api/docs:
+    get:
+      summary: API Documentation (simple list)
+      responses:
+        "200":
+          description: List of API endpoints
+          content:
+            application/json:
+              schema:
+                type: object # Describes the structure of the /api/docs response itself
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistrationRequest"
+      responses:
+        "201":
+          description: User registered and session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRegistrationResponse"
+        "400":
+          description: Failed to register user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/login:
+    post:
+      summary: Login user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+      responses:
+        "200":
+          description: Login successful, session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginResponse"
+        "401":
+          description: Failed to login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/user:
+    get:
+      summary: Get current user details
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserResponse"
+        "401":
+          description: Unauthorized or failed to get user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/logout:
+    post:
+      summary: Logout user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        "400":
+          description: Failed to logout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/data/{databaseId}/{collectionId}:
+    get:
+      summary: List documents from a collection
+      tags: [Data]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "main_db"
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "albums"
+        - name: queries
+          in: query
+          required: false
+          description: JSON string array of Appwrite queries (e.g., '["Query.equal(\"artist\", \"Artist Name\")"]')
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of documents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentList"
+        "400":
+          description: Failed to get documents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a document in a collection
+      tags: [Data]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Document"
+      responses:
+        "201":
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          description: Failed to create document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/data/{databaseId}/{collectionId}/{documentId}:
+    get:
+      summary: Get a single document
+      tags: [Data]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A single document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          description: Failed to get document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update a document
+      tags: [Data]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Document"
+      responses:
+        "200":
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          description: Failed to update document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a document
+      tags: [Data]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: databaseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Document deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        "400":
+          description: Failed to delete document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/storage/{bucketId}:
+    get:
+      summary: List files in a bucket
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bucketId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "album_covers"
+      responses:
+        "200":
+          description: A list of files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileListResponse"
+        "400":
+          description: Failed to list files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/storage/upload/{bucketId}:
+    post:
+      summary: Create a file upload URL
+      description: This endpoint provides a URL to which the client can then upload a file. It does not handle the file upload itself.
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bucketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileUploadRequest"
+      responses:
+        "200":
+          description: File upload URL created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadResponse"
+        "400":
+          description: Failed to create file upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/storage/{bucketId}/{fileId}:
+    get:
+      summary: Get a file's details and download URL
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bucketId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File details and download URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFileResponse"
+        "400":
+          description: Failed to get file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a file
+      tags: [Storage]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bucketId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        "400":
+          description: Failed to delete file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+tags:
+  - name: Auth
+    description: Authentication related endpoints
+  - name: Data
+    description: Database interaction endpoints
+  - name: Storage
+    description: File storage interaction endpoints

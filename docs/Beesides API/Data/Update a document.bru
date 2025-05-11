@@ -1,0 +1,25 @@
+meta {
+  name: Update a document
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/data/:databaseId/:collectionId/:documentId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  databaseId: 
+  collectionId: 
+  documentId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {}
+}

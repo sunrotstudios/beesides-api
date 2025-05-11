@@ -1,0 +1,20 @@
+meta {
+  name: Delete a file
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/storage/:bucketId/:fileId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  bucketId: 
+  fileId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}

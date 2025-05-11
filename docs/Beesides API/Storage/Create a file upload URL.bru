@@ -1,0 +1,26 @@
+meta {
+  name: Create a file upload URL
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/storage/upload/:bucketId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  bucketId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "",
+    "contentType": ""
+  }
+}

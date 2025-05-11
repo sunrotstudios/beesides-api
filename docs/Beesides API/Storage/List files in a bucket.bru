@@ -1,0 +1,19 @@
+meta {
+  name: List files in a bucket
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/storage/:bucketId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  bucketId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}

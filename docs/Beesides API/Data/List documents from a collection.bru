@@ -1,0 +1,24 @@
+meta {
+  name: List documents from a collection
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/data/:databaseId/:collectionId
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~queries: 
+}
+
+params:path {
+  databaseId: 
+  collectionId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
