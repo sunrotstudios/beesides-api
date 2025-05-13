@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { storage } from '../config/appwrite';
 import { ID } from 'node-appwrite';
 
 const router = express.Router();
 
 // Get a file
-router.get('/:bucketId/:fileId', async (req, res) => {
+router.get('/:bucketId/:fileId', async (req: Request, res: Response) => {
   try {
     const { bucketId, fileId } = req.params;
     
@@ -27,7 +27,7 @@ router.get('/:bucketId/:fileId', async (req, res) => {
 });
 
 // List files in a bucket
-router.get('/:bucketId', async (req, res) => {
+router.get('/:bucketId', async (req: Request, res: Response) => {
   try {
     const { bucketId } = req.params;
     
@@ -42,41 +42,46 @@ router.get('/:bucketId', async (req, res) => {
   }
 });
 
-// Create a file upload URL
-router.post('/upload/:bucketId', async (req, res) => {
+// Create file upload details for client-side uploads
+// Note: Clients should use these details with their own Appwrite SDK instance to upload files
+router.post('/upload/:bucketId', async (req: Request, res: Response) => {
   try {
     const { bucketId } = req.params;
-    const { name, contentType } = req.body;
+    const { name, contentType } = req.body as { name: string; contentType: string };
     
     // Generate a unique file ID
     const fileId = ID.unique();
     
-    // Create a new file with an empty file content
-    // This will return the file object with upload permissions
-    const file = await storage.createFile(
-      bucketId,
-      fileId,
-      undefined,  // Pass undefined for an empty file, client will upload content later
-      {
-        name,
-        contentType
-      }
-    );
+    // For direct client uploads, we need to return information that the client can use
+    // Since v11+ storage API doesn't have createFileUpload, we need a different approach
+    
+    // Construct the upload URL manually based on Appwrite API
+    const appwriteEndpoint = process.env.APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+    const appwriteProjectId = process.env.APPWRITE_PROJECT_ID;
+    
+    // Return details for client-side upload
+    const uploadEndpoint = `${appwriteEndpoint}/storage/buckets/${bucketId}/files`;
+    const uploadUrl = uploadEndpoint; // Define uploadUrl explicitly to fix TS error
     
     res.status(200).json({
       fileId,
-      uploadUrl
+      bucketId,
+      endpoint: uploadEndpoint,
+      uploadUrl, // Include uploadUrl in response
+      projectId: appwriteProjectId,
+      name,
+      contentType
     });
   } catch (error: any) {
     res.status(400).json({
-      message: error.message || 'Failed to create file upload URL',
+      message: error.message || 'Failed to prepare file upload details',
       error
     });
   }
 });
 
 // Delete a file
-router.delete('/:bucketId/:fileId', async (req, res) => {
+router.delete('/:bucketId/:fileId', async (req: Request, res: Response) => {
   try {
     const { bucketId, fileId } = req.params;
     
