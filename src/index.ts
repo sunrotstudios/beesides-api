@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import dataRoutes from './routes/data';
 import storageRoutes from './routes/storage';
+import onboardingRoutes from './routes/onboarding'; // Added import
 import { errorHandler, notFound } from './middleware/error';
 import { isAuthenticated } from './middleware/auth';
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/onboarding', isAuthenticated, onboardingRoutes); // Added route
 // Protected routes - require authentication
 app.use('/api/data', isAuthenticated, dataRoutes);
 app.use('/api/storage', isAuthenticated, storageRoutes);

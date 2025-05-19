@@ -1,4 +1,4 @@
-import { Client, Databases, Storage, Teams, Users, Query } from 'node-appwrite';
+import { Client, Databases, Storage, Teams, Users, Query, Account } from 'node-appwrite';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -32,7 +32,8 @@ const client = new Client()
 // Initialize Appwrite services
 const databases = new Databases(client);
 const storage = new Storage(client);
-const teams = new Teams(client);
 const users = new Users(client);
+const teams = new Teams(client);
+const account = new Account(client);
 
-export { client, databases, storage, teams, users, Query };
+export { client, databases, storage, users, teams, account, Query };
