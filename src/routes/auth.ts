@@ -1,5 +1,5 @@
 import express from 'express';
-import { users } from '../config/appwrite';
+import { users, databases } from '../config/appwrite';
 import { ID, Query } from 'node-appwrite';
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
     // Create a document in the users collection with the same ID as the auth user
     // This will be used to store user preferences and onboarding data
     try {
-      const { databases } = require('../config/appwrite');
+   
       const DB_ID = 'beesides_db';
       const USERS_COLLECTION_ID = 'users';
       

@@ -2,6 +2,12 @@ import express from 'express';
 import { databases } from '../config/appwrite';
 import { Query } from 'node-appwrite';
 import { isAuthenticated } from '../middleware/auth'; // Assuming you have auth middleware
+import { Request } from 'express';
+
+// Extend Express Request type to include user
+interface AuthenticatedRequest extends Request {
+  user: { $id: string }; // Adjust the type based on your actual user object structure
+}
 
 const router = express.Router();
 
@@ -11,8 +17,7 @@ const USERS_COLLECTION_ID = 'users'; // Or your users collection ID
 
 // GET onboarding progress
 router.get('/progress', isAuthenticated, async (req, res) => {
-  // @ts-ignore
-  const userId = req.user.$id; // Assuming userId is available from auth middleware
+  const userId = (req as AuthenticatedRequest).user.$id; // Assuming userId is available from auth middleware
 
   if (!userId) {
     return res.status(401).json({ message: 'User not authenticated' });
