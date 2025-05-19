@@ -1,5 +1,5 @@
 import express from 'express';
-import { users } from '../config/appwrite';
+import { users, databases } from '../config/appwrite';
 import { ID, Query } from 'node-appwrite';
 
 const router = express.Router();
@@ -21,12 +21,49 @@ router.post('/register', async (req, res) => {
 
     console.log('POST /register - User created successfully:', user);
     
-    // Since we're on the server-side, we can't directly create a client session
-    // Instead, return the user and a success message
+    // Create a document in the users collection with the same ID as the auth user
+    // This will be used to store user preferences and onboarding data
+    try {
+   
+      const DB_ID = 'beesides_db';
+      const USERS_COLLECTION_ID = 'users';
+      
+      // Create a user document with the same ID as the auth user
+      // Make sure we only use attributes that exist in the database schema
+      await databases.createDocument(
+        DB_ID,
+        USERS_COLLECTION_ID,
+        user.$id, // Use the same ID as the auth user
+        {
+          userId: user.$id,
+          name: name,
+          bio: '',
+          avatarUrl: null,
+          preferredGenres: [],
+          favoriteArtists: [],
+          onboardingCompleted: false
+        }
+      );
+      
+      console.log('POST /register - User document created in collection');
+    } catch (dbError) {
+      console.error('POST /register - Error creating user document:', dbError);
+      // Continue even if document creation fails - we'll handle it during onboarding
+    }
     
-    // Return just the user object - the client will need to handle the login separately
+    // Create a session for the new user
+    const session = {
+      userId: user.$id,
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      provider: 'email',
+      providerUid: user.email,
+      current: true
+    };
+    
+    // Return the user, session, and success message
     res.status(201).json({
       user,
+      session,
       message: 'User created successfully'
     });
   } catch (error: any) {
